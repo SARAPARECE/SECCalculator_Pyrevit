@@ -109,7 +109,7 @@ parentDirectory2 = os.path.dirname(parentDirectory1)
 
 SEC_WBS_file_path = os.path.join(parentDirectory2, 'Data', 'SEC_WBS.csv') # path da pasta e nome do cdv a abrir
 with open(SEC_WBS_file_path, mode='r', encoding='utf-8-sig') as SEC_WBS:
-    SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=";")
+    SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=",")
     SEC_WBS_data = list(SEC_WBS_table)
     SEC_WBS_dict = dict(SEC_WBS_data[0])
     list_column_names = list(SEC_WBS_dict.keys())
@@ -121,7 +121,7 @@ for i in range(len(SEC_WBS_data)):
 ########## Tabela excel ########### CO2VALUE
 Co2Value_path = os.path.join(parentDirectory2, 'Data', 'Co2Value2.csv')
 with open(Co2Value_path, mode='r', encoding='utf-8-sig') as SEC_WBS:
-    Co2Value_table = csv.DictReader(SEC_WBS, delimiter=";")
+    Co2Value_table = csv.DictReader(SEC_WBS, delimiter=",")
     Co2Value_data = list(Co2Value_table)
 for i in range(len(Co2Value_data)):
     for key in Co2Value_data[i]:
@@ -242,7 +242,7 @@ materials_list_temp = []
 
 for row in data:
     row['Mass'] = 0
-    if row['Unit of Measure'] == 'U':
+    if row['Unit of Measure'] == 'U': #alterar isto para receber mais o A L EV
         A = float(row['Conversion_Factor'])
         row['Mass'] = A
         row['Co2_Total'] = row['GWP_A1-A3']
@@ -346,7 +346,7 @@ CSV_file_path = os.path.join( selected_folder, 'Building_Information.csv') # pat
 column_names2 = ["Project Number",      "Project Name",      "Building Name",      "Building GFA (m2)*",      "Building lifespan (years)*"]
 
 with open(CSV_file_path, mode='r', encoding='utf-8-sig') as file:
-    reader = csv.DictReader(file, delimiter=';', fieldnames=column_names2)
+    reader = csv.DictReader(file, delimiter=',', fieldnames=column_names2)
     BI = list(reader)[1]
 try:
     for key in BI:

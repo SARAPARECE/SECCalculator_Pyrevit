@@ -121,7 +121,7 @@ parentDirectory2 = os.path.dirname(parentDirectory1)
 
 SEC_WBS_file_path = os.path.join(parentDirectory2, 'Data', 'SEC_WBS.csv') # path da pasta e nome do cdv a abrir
 with open(SEC_WBS_file_path, mode='r', encoding='utf-8-sig') as SEC_WBS:
-    SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=";")
+    SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=",")
     SEC_WBS_data = list(SEC_WBS_table)
     SEC_WBS_dict = dict(SEC_WBS_data[0])
     list_column_names = list(SEC_WBS_dict.keys())
@@ -134,7 +134,7 @@ for i in range(len(SEC_WBS_data)):
 ###### Tabela csv #### Co2Value ######
 Co2Value_file_path = os.path.join(parentDirectory2, 'Data', 'Co2Value2.csv')
 with open(Co2Value_file_path, mode='r', encoding='utf-8-sig') as SEC_WBS:
-    Co2Value_table = csv.DictReader(SEC_WBS, delimiter=";")
+    Co2Value_table = csv.DictReader(SEC_WBS, delimiter=",")
     Co2Value_data = list(Co2Value_table)
 for i in range(len(Co2Value_data)):
     for key in Co2Value_data[i]:
@@ -164,6 +164,8 @@ for i in range(len(data)):
                 data[i]['BLC_Co2_Total'] = None
                 data[i]['Normalised requirement factor over building lifetime'] = None
                 data[i]['Cost'] = None
+            else:
+                pass
 
 #3 Filtro Phase Created
 list_new = []
@@ -177,7 +179,6 @@ for row in data:
     list_new.append(row) # ver isto mais tarde
 data = list_new #passa a ser data
 
-
 #3 Filtro só classificados
 list_classified = []
 list_notclassified = []
@@ -188,6 +189,18 @@ for row in data:
     list_notclassified.append(row)
 
 data = list_classified #passa a ser data
+
+#4 ver se tem alguma coisa no wbs
+list_available = []
+list_not_available = []
+for row in data:
+    if 'GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)' in row:
+        list_available.append(row)
+    else:
+        list_not_available.append(row)
+data = list_available
+if len(list_not_available) > 0:
+    TaskDialog.Show("Missing codes in WBS", f"{list_not_available['SECClasS_Code']}.")
 
 ## add ao Export BIM coluna do id
 for id in range(len(data)):
@@ -227,8 +240,9 @@ row_headers.append("Total (must be 100%)")
 
 
 with open(csv_file_path, mode='r', encoding='utf-8-sig') as file:
-    reader = csv.DictReader(file, delimiter=';', fieldnames=row_headers)
+    reader = csv.DictReader(file, delimiter=',', fieldnames=row_headers)
     EI = list(reader)[1:-1]
+
 for i in range(len(EI)):
     for key in EI[i]:
         EI[i][key] = EI[i][key].replace(',', '.')
@@ -245,7 +259,7 @@ column_names2 = ["Project Number",
       "Building lifespan (years)*"]
 
 with open(csv_file_path1, mode='r', encoding='utf-8-sig') as file:
-    reader = csv.DictReader(file, delimiter=';', fieldnames=column_names2)
+    reader = csv.DictReader(file, delimiter=',', fieldnames=column_names2)
     BI = list(reader)[1]
 try:
     for key in BI:
@@ -258,11 +272,10 @@ except Exception as e:
 Project_Number = BI['Project Number']
 Project_Name = BI['Project Name']
 Building_Name = BI['Building Name']
-Building_GFA = int(BI['Building GFA (m2)*'])
+Building_GFA = float(BI['Building GFA (m2)*'])
 Building_lifespan = int(BI['Building lifespan (years)*'])
 ####################################
 
-#print("data", data)
 
 ###########  Cascata  ###########
 
@@ -272,7 +285,7 @@ for i in range(len(data)):
     temp = []
     for key in range(len(EI)):
         if data[i]["SECClasS_Code"] == EI[key]["SECClasS_Code"]:
-            #print(EI[key]["Conversion Factor (kg/m3, kg/m2, kg/m, kg/u)"])
+            #print(EI[key]["GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)"])
             data[i]["Conversion Factor (kg/m3, kg/m2, kg/m, kg/u)"] = float(EI[key]["Conversion Factor (kg/m3, kg/m2, kg/m, kg/u)"])
             data[i]["Quantity of elements"] = int(EI[key]["Quantity of elements"])
             data[i]["GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)"] = float(EI[key]["GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)"])
@@ -324,13 +337,15 @@ for key in range(len(EI)):
                     nova_string = name[:-4]
                     data[lists['id']].update({
                         nova_string + ' (Mass)': float(EI[key][name]) * Mass})
+
                 else:
                     pass
+
 
 # Calculo Co2
 for row in data:
     for row2 in Co2Value_data:
-      if "Mass" in row and (row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'] is None or float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)']) == 0):
+      if row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'] is None or float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)']) == 0:
           for name in list_column_names[15:]:
               nova_string = name[:-4]
               if str(nova_string) == str(row2['SECClasS_Title_EN']):
@@ -338,31 +353,31 @@ for row in data:
                       nova_string + ' (Co2)': float(row2['A1_A3']) * float(row[nova_string + ' (Mass)'])
                   }
                   data[row['id']].update(Co2_temp)
-
               else:
                   pass
-
+          total_co2 = 0
+          for key, value in row.items():
+              if key.endswith(" (Co2)"):
+                  total_co2 += value
+          row["Co2_Total"] = total_co2
 
         # Calculo Co2_GWP
       elif float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)']) > 0 or not None:
         if row["Unit of Measure"] == "V":
           Co2_GWP = row['Volume'] * row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)']
+          #print("V", Co2_GWP)
         elif row["Unit of Measure"] == "A":
-          Co2_GWP = row['Area'] * float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'])
+          Co2_GWP = float(row['Area']) * float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'])
         elif row["Unit of Measure"] == "L":
           Co2_GWP = row['Length'] * float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'])
         elif row["Unit of Measure"] == "U":
           Co2_GWP = float(row['GWP A1-A3 (kgCo2e/m3, kgCo2e/m2, kgCo2e/m, kgCo2e/u)'])
         else:
           Co2_GWP = 0
-        data[row['id']]['Co2_Total'] = Co2_GWP
-        #print(row['id'], row['SECClasS_Code'], "Co2_GWP=", Co2_GWP)
+        row["Co2_Total"] = Co2_GWP
+        #data[row['id']]['Co2_Total'] = Co2_GWP
+        #print(row['id'], row['Co2_Total'], "Co2_GWP=", Co2_GWP)
 
-    total_co2 = 0
-    for key, value in row.items():
-        if key.endswith(" (Co2)"):
-            total_co2 += value
-    row["Co2_Total"] = total_co2
 
 # LP * Expected_lifespan e add vari LP_factor * mass
 for row in data:
@@ -405,11 +420,11 @@ Normalized_2 = (Normalized_Co2 / Building_lifespan)
 ################## Export data ################
 for i in range(len(data)):
     for key in data[i]:
-        data[i][key] = str(data[i][key]).replace('.', ',')
+        data[i][key] = str(data[i][key])
 
 ###################################
-json_file_path = os.path.join(os.path.dirname(__file__), "output_data.json")
-csv3_file_path = os.path.join(os.path.dirname(__file__), "output_data.csv")
+json_file_path = os.path.join(selected_folder, "output_data.json")
+csv3_file_path = os.path.join(selected_folder, "output_data.csv")
 Output_APP = json.dumps(data)
 
 jsonFile = open(json_file_path, mode='w', newline='')
@@ -478,8 +493,6 @@ GWP Global = {TOTAL_CO2:.2f} kgCo2e
 Normalized GWP = {Normalized_Co2:.2f} kgCo2e/m2
 
 Social Cost of Carbon = {SOCIAL_COST:.2f} €
-
-Total Cost  = {TOTAL_COST:.2f} €
 
 Mass Global considering Building Life Cycle  = {TOTAL_MASS_BLC:.2f} kg
 

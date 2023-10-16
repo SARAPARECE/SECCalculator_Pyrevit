@@ -140,7 +140,7 @@ if folder == True:
 
     SEC_WBS_file_path = os.path.join(parentDirectory2, 'Data', 'SEC_WBS.csv') # path da pasta e nome do cdv a abrir
     with open(SEC_WBS_file_path, mode='r', encoding='utf-8-sig') as SEC_WBS:
-        SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=";")
+        SEC_WBS_table = csv.DictReader(SEC_WBS, delimiter=",")
         SEC_WBS_data = list(SEC_WBS_table)
         SEC_WBS_dict = dict(SEC_WBS_data[0])
         list_column_names = list(SEC_WBS_dict.keys())
